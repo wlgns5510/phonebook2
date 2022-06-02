@@ -38,8 +38,7 @@ public class PhoneDao {
 		}
 	}
 
-	private void close() {
-		// 5. 자원정리
+	private void close() {	
 		try {
 			if (rs != null) {
 				rs.close();
