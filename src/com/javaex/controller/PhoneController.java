@@ -1,7 +1,6 @@
 package com.javaex.controller;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,105 +8,96 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.util.*;
 import com.javaex.dao.PhoneDao;
-import com.javaex.util.WebUtil;
 import com.javaex.vo.PersonVo;
+import com.javaex.util.WebUtil;
 
 
-@WebServlet("/pbc")
+@WebServlet("/pbc") //컨트롤러의 주소 경로 이름
 public class PhoneController extends HttpServlet {
-	//필드 
+	//필드
 	private static final long serialVersionUID = 1L;
 	
-	//생성자 (기본생성자 사용)
-	//메소드 -gs
+	//생성자
 	
-	//메소드 -일반
-	//get방식으로 요청시 호출 메소드
+	
+	//메소드 get/set
+	
+	
+	//메소드 일반
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		//포스트 방식일때 한글깨짐 방지
+		//코드
 		request.setCharacterEncoding("UTF-8");
 		
-		//action파라미터 꺼내기
+		PhoneDao pDao = new PhoneDao();
+		
 		String action = request.getParameter("action");
-		System.out.println(action);
 		
-		
-		if("list".equals(action)) { //리스트일때
+		if("list".equals(action)) {
 			//데이터 가져오기
-			PhoneDao phoneDao = new PhoneDao();
-			List<PersonVo> phoneList = phoneDao.getPersonList();
-			System.out.println(phoneList);
+			List<PersonVo> pList = pDao.personSelect();
+			System.out.println(pList);
 			
-			//request에 데이터 추가
-			request.setAttribute("pList", phoneList);
+			//request를 통해서 전달할 데이터 추가
+			request.setAttribute("pList", pList);
 			
-			//데이터 + html --> jsp 시킨다
-			WebUtil.forward(request, response, "/WEB-INF/list.jsp");
-			
-			/*
-			RequestDispatcher rd = request.getRequestDispatcher("/list.jsp");
-			rd.forward(request, response);
-			*/
-		}else if("writeForm".equals(action)) { //등록폼일때
-			
-			//포워드
-			WebUtil.forward(request, response, "/WEB-INF/writeForm.jsp");
-			/*
-			RequestDispatcher rd = request.getRequestDispatcher("/writeForm.jsp");
-			rd.forward(request, response);
-			*/
-		}else if("write".equals(action)) { //등록일때
-
-			//파라미터에서 값 꺼내기(name, hp ,company)
+			//jsp 부를때 쓰는 코드
+			WebUtil.forward(request, response, "WEB-INF/list.jsp");
+		}
+		else if("writeForm".equals(action)) {
+			WebUtil.forward(request, response, "WEB-INF/writeForm.jsp");
+		}
+		else if("insert".equals(action)) {
+			//파라미터에서 값 꺼내기(name, hp, company)
 			String name = request.getParameter("name");
 			String hp = request.getParameter("hp");
 			String company = request.getParameter("company");
 			
 			//vo만들어서 값 초기화
-			PersonVo personVo = new PersonVo(name, hp, company);
-			System.out.println(personVo);
+			PersonVo pVo = new PersonVo(name, hp, company);
+			System.out.println(pVo);
 			
+			//phoneDao.personInsert()
+			pDao.personInsert(pVo);
 			
-			//phoneDao.personInsert()를 통해 저장하기
-			PhoneDao phoneDao = new PhoneDao();
-			int count = phoneDao.personInsert(personVo);
-			System.out.println(count);
-			
-			//리다이렉트 list
+			//redirect
 			WebUtil.redirect(request, response, "./pbc?action=list");
-			/*
-			response.sendRedirect("./pbc?action=list");
-			*/
 			
-		}else if("delete".equals(action)) { //삭제일때
-			
-			//파라미터에서 id값을 꺼낸다
+		}
+		else if("updateForm".equals(action)) {
 			int id = Integer.parseInt(request.getParameter("id"));
+			PersonVo pVo = pDao.getPerson(id);
 			
-			//phoneDao.personDelete()를 통해 삭제하기
-			PhoneDao phoneDao = new PhoneDao();
-			int count = phoneDao.personDelete(id);
+			request.setAttribute("pVo", pVo);
 			
-			//리다이렉트 list
+			WebUtil.forward(request, response, "WEB-INF/updateForm.jsp");
+		}
+		else if("update".equals(action)) {
+			int id = Integer.parseInt(request.getParameter("id"));
+			String name = request.getParameter("name");
+			String hp = request.getParameter("hp");
+			String company = request.getParameter("company");
+			
+			PersonVo pVo = new PersonVo(id, name, hp, company);
+			System.out.println(pVo);
+			
+			pDao.personUpdate(pVo);
+			
 			WebUtil.redirect(request, response, "./pbc?action=list");
-			/*
-			response.sendRedirect("./pbc?action=list");
-			*/
-		}else {
+		}
+		else if("delete".equals(action)) {
+			int id = Integer.parseInt(request.getParameter("id"));
+			pDao.personDelete(id);
+			
+			WebUtil.redirect(request, response, "./pbc?action=list");
+		}
+		else {
 			System.out.println("action 파라미터 없음");
 		}
-		
-		
-		
 	}
 	
-	//post방식으로 요청시 호출 메소드
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("여기는 post");
-		
 		doGet(request, response);
 	}
-
 }
